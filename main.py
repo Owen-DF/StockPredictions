@@ -1,6 +1,6 @@
 from tkinter import *
 import ttkbootstrap as ttk
-
+import grumodel
 
 
 
@@ -8,7 +8,7 @@ import ttkbootstrap as ttk
 
 def entryClicked():
     company = clicked.get()
-    print(company)
+    grumodel.readFile(company)
     return
 
 
@@ -37,6 +37,7 @@ title.config(font=("Times New Roman", 20, "bold"))
 dropdownFrame = ttk.Frame(root)
 dropdownFrame.pack(padx=5, pady=10, fill='x')
 ttk.Label(dropdownFrame,  text = "Select Company:").pack(side="left", padx = 5)
+#these are the current companies we will track and train the models for
 options = ['Nvidia', 'IBM', 'Whirlpool', 'United Rentals']
 clicked = StringVar()
 clicked.set("Select a company")
