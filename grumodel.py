@@ -13,17 +13,21 @@ def readFile(company):
     match company:
         case "IBM":
             dataset = pd.read_csv('ExcelFiles/IBM/IBM.csv', index_col='Date', parse_dates=['Date'])
-            print(dataset.head())
-            prepareData(dataset)
-
+            prepareData(dataset, company)
+        case "United Rentals":
+            dataset = pd.read_csv('ExcelFiles/UR/URI.csv', index_col='Date', parse_dates=['Date'])
+            prepareData(dataset, company)
         case _:
             print("boop")
 
-def prepareData(dataset):
+def prepareData(dataset, company):
     # Split the dataset into training and test sets
-    training_end_date = '2023-06-30'
+    training_end_date = dataset.index.to_series().quantile(0.8)
     training_set = dataset.loc[:training_end_date, 'Close'].values
-    test_set = dataset.loc['2023-07-01':, 'Close'].values
+    test_set = dataset.loc[training_end_date: , 'Close'].values
+
+    print(f"Training set range: {dataset.loc[:training_end_date].index[0]} to {dataset.loc[:training_end_date].index[-1]}")
+    print(f"Test set range: {dataset.loc[training_end_date:].index[0]} to {dataset.loc[training_end_date:].index[-1]}")
 
     # Scale the data
     sc = MinMaxScaler(feature_range=(0, 1))
@@ -38,9 +42,9 @@ def prepareData(dataset):
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
-    lstmModel(X_train, y_train, dataset, test_set, sc)
+    lstmModel(X_train, y_train, dataset, test_set, sc, company)
 
-def lstmModel(X_train, y_train, dataset, test_set, sc):
+def lstmModel(X_train, y_train, dataset, test_set, sc, company):
     # The LSTM architecture
     regressor = Sequential()
     # First LSTM layer with Dropout regularisation
@@ -63,6 +67,12 @@ def lstmModel(X_train, y_train, dataset, test_set, sc):
     # Fitting to the training set
     regressor.fit(X_train, y_train, epochs=50, batch_size=32)
 
+
+    if company == "IBM":
+        regressor.save('stock_price_predictor_IBM.h5')
+    elif company == "United Rentals":
+        regressor.save('stock_price_predictor_UnitedRentals.h5')
+
     x_test(dataset, test_set, sc, regressor)
 
 def x_test(dataset, test_set, sc, regressor):
@@ -83,7 +93,7 @@ def x_test(dataset, test_set, sc, regressor):
 
     return_rmse(test_set, predicted_stock_price)
 
-    # Predicting the next 10 days
+    # Predicting the next 5 days
     predict_future(dataset, sc, regressor)
 
 def plot_predictions(test, predicted):
@@ -98,9 +108,10 @@ def plot_predictions(test, predicted):
 def return_rmse(test, predicted):
     rmse = math.sqrt(mean_squared_error(test, predicted))
     print("The root mean squared error is {}.".format(rmse))
+    
 def predict_future(dataset, sc, regressor):
-    future_days = 10
-    last_60_days = dataset["High"][-60:].values.reshape(-1, 1)
+    future_days = 5
+    last_60_days = dataset["Close"][-60:].values.reshape(-1, 1)
     scaled_last_60_days = sc.transform(last_60_days)
 
     future_predictions = []
@@ -111,11 +122,12 @@ def predict_future(dataset, sc, regressor):
         future_pred = regressor.predict(current_input)
         future_predictions.append(future_pred[0, 0])
 
-        current_input = np.append(current_input[:, 1:, :], [[future_pred]], axis=1)
+        future_pred_reshaped = np.reshape(future_pred, (1, 1, 1))
+        current_input = np.append(current_input[:, 1:, :], future_pred_reshaped, axis=1)
 
     future_predictions = sc.inverse_transform(np.array(future_predictions).reshape(-1, 1))
-    
-    plot_future_predictions(future_predictions)
+    print("Future Prediction: ", future_predictions.flatten())
+    # plot_future_predictions(future_predictions)
 
 def plot_future_predictions(future_predictions):
     plt.plot(future_predictions, color='green', label='Predicted Future IBM Stock Price')
@@ -124,3 +136,6 @@ def plot_future_predictions(future_predictions):
     plt.ylabel('IBM Stock Price')
     plt.legend()
     plt.show()
+
+# Example usage
+# readFile('IBM')

@@ -9,6 +9,8 @@ import grumodel
 def entryClicked():
     company = clicked.get()
     grumodel.readFile(company)
+    
+
     return
 
 
