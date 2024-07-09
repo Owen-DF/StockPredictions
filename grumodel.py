@@ -17,17 +17,14 @@ def readFile(company):
         case "United Rentals":
             dataset = pd.read_csv('ExcelFiles/UR/URI.csv', index_col='Date', parse_dates=['Date'])
             prepareData(dataset, company)
+        case "Nvidia":
+            dataset = pd.read_csv('ExcelFiles/NVIDIA/NVDA.csv', index_col='Date', parse_dates=['Date'])
+            prepareData(dataset, company)
         case _:
             print("boop")
 
-def prepareData(dataset, company):
-    # Split the dataset into training and test sets
-    training_end_date = dataset.index.to_series().quantile(0.8)
-    training_set = dataset.loc[:training_end_date, 'Close'].values
-    test_set = dataset.loc[training_end_date: , 'Close'].values
+def prepareData(training_set, test_set, company, dataset):
 
-    print(f"Training set range: {dataset.loc[:training_end_date].index[0]} to {dataset.loc[:training_end_date].index[-1]}")
-    print(f"Test set range: {dataset.loc[training_end_date:].index[0]} to {dataset.loc[training_end_date:].index[-1]}")
 
     # Scale the data
     sc = MinMaxScaler(feature_range=(0, 1))
@@ -41,10 +38,16 @@ def prepareData(dataset, company):
     X_train, y_train = np.array(X_train), np.array(y_train)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
+    return X_train, y_train
+    # lstmModel(X_train, y_train, dataset, test_set, sc, company)
 
-    lstmModel(X_train, y_train, dataset, test_set, sc, company)
+# Example call to the prepareData function
+# companyName = "YourCompany"
+# dataset = load your dataset here
+# prepareData(dataset, companyName)
 
-def lstmModel(X_train, y_train, dataset, test_set, sc, company):
+
+def lstmModel(X_train, y_train, company):
     # The LSTM architecture
     regressor = Sequential()
     # First LSTM layer with Dropout regularisation
@@ -69,13 +72,16 @@ def lstmModel(X_train, y_train, dataset, test_set, sc, company):
 
 
     if company == "IBM":
-        regressor.save('stock_price_predictor_IBM.h5')
+        regressor.save('ExcelFiles/IBM/IBM.h5')
     elif company == "United Rentals":
-        regressor.save('stock_price_predictor_UnitedRentals.h5')
+        regressor.save('ExcelFiles/UR/URI.h5')
+    elif company == "Nvidia":
+        regressor.save('ExcelFiles/NVIDIA/Nvidia.h5')
 
-    x_test(dataset, test_set, sc, regressor)
+    x_test(dataset, test_set, regressor)
 
-def x_test(dataset, test_set, sc, regressor):
+def x_test(dataset, test_set, regressor):
+    sc = MinMaxScaler(feature_range=(0, 1))
     dataset_total = pd.concat((dataset["Close"][:'2023-06-30'], dataset["Close"]['2023-07-01':]), axis=0)
     inputs = dataset_total[len(dataset_total) - len(test_set) - 60:].values
     inputs = inputs.reshape(-1, 1)
