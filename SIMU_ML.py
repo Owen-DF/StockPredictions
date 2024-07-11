@@ -6,26 +6,35 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 import math
 from sklearn.metrics import mean_squared_error
+import yfinance as yf
+import datetime as dt
 
-company = "United Rentals"
+# Get today's date
+today = dt.date.today()
+print(f"Today's date: {today}")
 
-# Load the dataset
+# Calculate the date 10 years ago from today
+start = today - pd.DateOffset(years=10)
+
+
+company = "IBM"
+
 if company == "IBM":
-    datasetFULL = pd.read_csv('ExcelFiles/IBM/IBM.csv', index_col='Date', parse_dates=['Date'])
+    data = yf.download('IBM', start=start, end=today)
 elif company == "United Rentals":
-    datasetFULL = pd.read_csv('ExcelFiles/UR/URI.csv', index_col='Date', parse_dates=['Date'])
+    data = yf.download('URI', start=start, end=today)
 elif company == "Nvidia":
-    datasetFULL = pd.read_csv('ExcelFiles/NVIDIA/NVDA.csv', index_col='Date', parse_dates=['Date'])
+    data = yf.download('NVDA', start=start, end=today)
 
 # Calculate the end date that is 3 months before the maximum date in the dataset
-datasetEnd = datasetFULL.index.max() - pd.DateOffset(months=3)
+datasetEnd = data.index.max() - pd.DateOffset(months=3)
 print(f"End date excluding the last 3 months: {datasetEnd}")
 
 # Filter the dataset to exclude the last 3 months
-dataset_filtered = datasetFULL[datasetFULL.index <= datasetEnd]
+dataset_filtered = data[data.index <= datasetEnd]
 
 # Calculate the quantile date to split the dataset
 quantileDate = dataset_filtered.index.to_series().quantile(0.8)
@@ -64,9 +73,10 @@ regressor.add(LSTM(units=50))
 regressor.add(Dropout(0.2))
 # The output layer
 regressor.add(Dense(units=1))
+optimizer = SGD(learning_rate=.01)
 
 # Compiling the RNN
-regressor.compile(optimizer='rmsprop', loss='mean_squared_error')
+regressor.compile(optimizer=optimizer, loss='mean_squared_error')
 # Fitting to the training set
 regressor.fit(X_train, y_train, epochs=50, batch_size=32)
 

@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)  # Example logging setup
 
 # Global variables (consider encapsulating in a class for better organization)
 sum = 100000
-difList = []
+difList = [] 
 buyList = []
 
 def buyShare(company, allocatedMoney, dataset):
@@ -19,6 +19,12 @@ def buyShare(company, allocatedMoney, dataset):
     close_value = dataset['Close'].iloc[-1]
     amount = allocatedMoney // close_value
     actualMoney = amount * close_value
+    if sum ==0:
+        logging.info(f"Insufficient funds to buy {amount} shares of {company}.")
+        return
+    if actualMoney > sum:
+        logging.info(f"Insufficient funds to buy {amount} shares of {company}.")
+        actualMoney = sum
     sum -= actualMoney
 
     buyInstance = Buy(close_value, amount, company, dataset.index[-1])
@@ -105,14 +111,14 @@ def weekSort(dataset):
     except Exception as e:
         logging.error(f"Week sorting error: {e}")
 
-def traderBuy(dataset):
+def traderBuy(dataset, company):
     try:
         futurePredictions = load_and_predict(model, dataset)
         weekDif = futurePredictions[4] - futurePredictions[0]
         difList.append(weekDif)
         
         if weekDif > 0:
-            buyInstance = buyShare("United Rentals", 10000, dataset)
+            buyInstance = buyShare(company, 10000, dataset)
             # logging.info(f"Predicted to increase: {weekDif}, Buy instance: {buyInstance}")
             logging.info(f"Purchase:  {buyInstance}")
             buyList.append(buyInstance)
@@ -151,7 +157,7 @@ def buyListClean(buyList):
     return buyList
 
 
-def tradeLoop(dataset, buyList):
+def tradeLoop(dataset, buyList, company):
     try:
         datasetWeek = weekSort(dataset)
         fridays = datasetWeek[datasetWeek.index.weekday == 4].index  # Fridays in the dataset
@@ -160,8 +166,8 @@ def tradeLoop(dataset, buyList):
             if len(full_data_until_friday) < 60:
                 continue  # Skip if there are not enough data points
             buyList = buyListClean(buyList)
-            traderBuy(full_data_until_friday)
-            traderSell(full_data_until_friday)
+            traderBuy(full_data_until_friday, company)
+            # traderSell(full_data_until_friday)
     
     except Exception as e:
         logging.error(f"Error in tradeLoop function: {e}")
@@ -171,7 +177,7 @@ companyName = input("Enter company name: ")
 model, dataset = loadDatasetAndModel(companyName)
 
 if model is not None and not dataset.empty:
-    tradeLoop(dataset, buyList)
+    tradeLoop(dataset, buyList, companyName)
 else:
     print("Error loading model or dataset. Exiting...")
 # Calculate total assets and sum after trading
