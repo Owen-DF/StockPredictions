@@ -20,15 +20,19 @@ print(f"Today's date: {today}")
 start = today - pd.DateOffset(years=10)
 
 
-company = "IBM"
-
+company = input("Enter the company name (IBM, URI, NVDA, AAPL, SIRI, BA): ")
 if company == "IBM":
     data = yf.download('IBM', start=start, end=today)
-elif company == "United Rentals":
+elif company == "URI":
     data = yf.download('URI', start=start, end=today)
-elif company == "Nvidia":
+elif company == "NVDA":
     data = yf.download('NVDA', start=start, end=today)
-
+elif company == "AAPL":
+    data = yf.download('AAPL', start=start, end=today)
+elif company == "SIRI":
+    data = yf.download('SIRI', start=start, end=today)
+elif company == "BA":
+    data = yf.download('BA', start=start, end=today)
 # Calculate the end date that is 3 months before the maximum date in the dataset
 datasetEnd = data.index.max() - pd.DateOffset(months=3)
 print(f"End date excluding the last 3 months: {datasetEnd}")
@@ -83,10 +87,16 @@ regressor.fit(X_train, y_train, epochs=50, batch_size=32)
 # Saving the model
 if company == "IBM":
     regressor.save('ExcelFiles/IBM/IBM.h5')
-elif company == "United Rentals":
-    regressor.save('ExcelFiles/UR/URI.h5')
-elif company == "Nvidia":
-    regressor.save('ExcelFiles/NVIDIA/Nvidia.h5')
+elif company == "URI":
+    regressor.save('ExcelFiles/URI/URI.h5')
+elif company == "NVDA":
+    regressor.save('ExcelFiles/NVDA/NVDA.h5')
+elif company == "AAPL":
+    regressor.save('ExcelFiles/AAPL/AAPL.h5')
+elif company == "SIRI":
+    regressor.save('ExcelFiles/SIRI/SIRI.h5')
+elif company == "BA":
+    regressor.save('ExcelFiles/BA/BA.h5')
 
 # Prepare the inputs for prediction on the test set
 dataset_total = pd.concat((dataset_filtered["Open"][:quantileDate], dataset_filtered["Open"][quantileDate + pd.Timedelta(days=1):]), axis=0)

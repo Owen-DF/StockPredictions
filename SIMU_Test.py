@@ -7,7 +7,7 @@ from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import math
-import logging
+import logging 
 
 # Setting up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,7 +22,7 @@ COMPANY_PATHS = {
 }
 
 # Define the company
-company = "United Rentals"
+company = "IBM"
 
 # Function to load dataset and model
 def loadDatasetAndModel(company):
