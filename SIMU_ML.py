@@ -23,7 +23,7 @@ start = today - pd.DateOffset(years=10)
 company = input("Enter the company name (IBM, URI, NVDA, AAPL, SIRI, BA): ")
 if company == "IBM":
     data = yf.download('IBM', start=start, end=today)
-elif company == "URI":
+elif company == "URI": 
     data = yf.download('URI', start=start, end=today)
 elif company == "NVDA":
     data = yf.download('NVDA', start=start, end=today)

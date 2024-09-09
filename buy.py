@@ -10,5 +10,5 @@ class Buy:
         return f" Company name: {self.companyName}, Quantity: {self.quantity}, Purchase price: {self.purchasePrice}, Date: {self.date}"
     
 
-    def value(self):
+    def totalPurchaseValue(self):
         return self.quantity * self.purchasePrice
